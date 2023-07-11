@@ -16,3 +16,5 @@ val BackgroundEnd = Color(0xFF44515F)
 val AccentStart = Color(0xFFB657E9)
 val AccentEnd = Color(0xFF6F59E2)
 val AccentButtons = Color(0x40FFFFFF)
+
+val DeleteButton = Color(0x7AC50B0B)

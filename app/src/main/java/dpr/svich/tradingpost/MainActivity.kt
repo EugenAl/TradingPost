@@ -17,14 +17,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
@@ -44,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -58,11 +64,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import dpr.svich.tradingpost.model.Stock
 import dpr.svich.tradingpost.ui.theme.AccentButtons
 import dpr.svich.tradingpost.ui.theme.AccentEnd
 import dpr.svich.tradingpost.ui.theme.AccentStart
 import dpr.svich.tradingpost.ui.theme.BackgroundEnd
 import dpr.svich.tradingpost.ui.theme.BackgroundStart
+import dpr.svich.tradingpost.ui.theme.DeleteButton
 import dpr.svich.tradingpost.ui.theme.Purple40
 import dpr.svich.tradingpost.ui.theme.TradingPostTheme
 
@@ -118,18 +126,20 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
         TextField(
             value = inputvalue.value,
             onValueChange = { inputvalue.value = it },
-            label = { Text("Владелец", color = Color.White) } ,
+            label = { Text("Владелец", color = Color.White) },
             placeholder = { Text(text = "Введите имя") },
             modifier = Modifier
                 .padding(all = 16.dp)
                 .fillMaxWidth(),
-            textStyle = TextStyle(color = Color.White,
+            textStyle = TextStyle(
+                color = Color.White,
                 // below line is used to add font
                 // size for our text field
                 fontSize = 22.sp,
 
                 // below line is use to change font family.
-                fontFamily = FontFamily.Monospace),
+                fontFamily = FontFamily.Monospace
+            ),
 
             keyboardOptions = KeyboardOptions(
                 // below line is use for capitalization
@@ -147,13 +157,15 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
             ),
             colors = TextFieldDefaults.textFieldColors(containerColor = Color.Transparent)
         )
-        Box(Modifier.fillMaxSize(), contentAlignment = Center){
-            Button(onClick = { /*TODO*/ },
+        Box(Modifier.fillMaxSize(), contentAlignment = Center) {
+            Button(
+                onClick = { /*TODO*/ },
                 modifier = Modifier,
                 shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent
-                ),){
+                ),
+            ) {
                 Box(
                     modifier = Modifier
                         .background(
@@ -162,11 +174,13 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                         )
                         .size(64.dp),
                     contentAlignment = Alignment.Center
-                ){
+                ) {
                     // Adding an Icon "Add" inside the Button
-                    Icon(Icons.Default.ArrowForward ,
+                    Icon(
+                        Icons.Default.ArrowForward,
                         contentDescription = "content description",
-                        tint = Color.White)
+                        tint = Color.White
+                    )
                 }
             }
         }
@@ -174,8 +188,72 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Profile(){
+fun Profile() {
+    val openDialogCreateStockPortfolio = remember {
+        mutableStateOf(false)
+    }
+    val inputValueNameStockPortfolio = remember {
+        mutableStateOf(TextFieldValue())
+    }
+    if (openDialogCreateStockPortfolio.value) {
+        // Alert dialog for create stock portfolio
+        AlertDialog(
+            onDismissRequest = { openDialogCreateStockPortfolio.value = false },
+            title = { Text(text = "Создать портфель") },
+            text = {
+                TextField(
+                    value = inputValueNameStockPortfolio.value,
+                    onValueChange = { inputValueNameStockPortfolio.value = it },
+                    label = { Text("Название", color = Color.White) },
+                    placeholder = { Text(text = "Введите название") },
+                    modifier = Modifier
+                        .padding(all = 16.dp)
+                        .fillMaxWidth(),
+                    textStyle = TextStyle(
+                        color = Color.White,
+                        // below line is used to add font
+                        // size for our text field
+                        fontSize = 14.sp,
+
+                        // below line is use to change font family.
+                        fontFamily = FontFamily.Default
+                    ),
+
+                    keyboardOptions = KeyboardOptions(
+                        // below line is use for capitalization
+                        // inside our text field.
+                        capitalization = KeyboardCapitalization.Sentences,
+
+                        // below line is to enable auto
+                        // correct in our keyboard.
+                        autoCorrect = true,
+
+                        // below line is used to specify our
+                        // type of keyboard such as text, number, phone.
+                        keyboardType = KeyboardType.Text,
+                        ImeAction.Done
+                    ),
+                    colors = TextFieldDefaults.textFieldColors(containerColor = Color.Transparent)
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = { openDialogCreateStockPortfolio.value = false },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AccentButtons,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(text = "Создать", textAlign = TextAlign.Center)
+                }
+            },
+            shape = CutCornerShape(topStart = 16.dp, bottomEnd = 16.dp),
+            containerColor = AccentEnd
+        )
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -186,8 +264,8 @@ fun Profile(){
                 shape = RectangleShape
             )
             .padding(8.dp)
-    ){
-        Column (
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
@@ -195,46 +273,62 @@ fun Profile(){
                     shape = RoundedCornerShape(16.dp)
                 )
                 .padding(8.dp),
-                ){
-            Row(horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)){
-                Text(text = "Котик",
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = "Котик",
                     modifier = Modifier.padding(bottom = 32.dp),
                     fontSize = 32.sp,
-                    fontWeight = FontWeight.SemiBold)
-                Icon(imageVector = Icons.Default.Settings,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Icon(
+                    imageVector = Icons.Default.Settings,
                     contentDescription = "Settings",
                     modifier = Modifier.size(24.dp),
-                    tint = Color.White)
+                    tint = Color.White
+                )
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = CenterVertically) {
+            Row(
+                Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = CenterVertically
+            ) {
 
-                Text(text = "Портфелей: 4",
+                Text(
+                    text = "Портфелей: 4",
                     modifier = Modifier.padding(start = 8.dp),
                     fontSize = 18.sp,
-                textAlign = TextAlign.Justify)
+                    textAlign = TextAlign.Justify
+                )
 
-                Button(onClick = { /*TODO*/ },
+                Button(
+                    onClick = { openDialogCreateStockPortfolio.value = true },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AccentButtons,
-                        contentColor = Color.White),
-                shape = RoundedCornerShape(16.dp)
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.Add,
+                    Icon(
+                        imageVector = Icons.Default.Add,
                         contentDescription = "Settings",
                         modifier = Modifier.size(24.dp),
-                        tint = Color.White)
+                        tint = Color.White
+                    )
                     Text(text = "Создать", textAlign = TextAlign.Center)
                 }
             }
         }
-        // TODO: Lazy column imp
-//        LazyColumn(content = ){
-//
-//        }
+        val stockPortfolios = listOf("Акции Сбер", "Tinkoff", "Крипта", "Фьючерсы на гречу")
+        LazyColumn {
+            for (sp in stockPortfolios) {
+                item { StockPortfolioItem(sp) }
+            }
+        }
     }
 }
 
@@ -243,5 +337,70 @@ fun Profile(){
 fun GreetingPreview() {
     TradingPostTheme {
         Profile()
+    }
+}
+
+@Composable
+fun StockPortfolioItem(name: String = "Шикаладка") {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Text(text = name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Row(
+            Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = CenterVertically
+        ) {
+            Text(text = "Содержимое:")
+            Row{
+                Button(
+                    onClick = { /*TODO*/ },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AccentButtons,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.padding(end = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Add",
+                        modifier = Modifier.size(20.dp),
+                        tint = Color.White
+                    )
+                }
+                Button(
+                    onClick = { /*TODO*/ },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = DeleteButton,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Add",
+                        modifier = Modifier.size(20.dp),
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+        val stocks = listOf<Stock>(Stock("SBER"), Stock("MMQ"), Stock("TIFF"))
+        Column(Modifier.padding(start = 16.dp, bottom = 8.dp)) {
+            for (stock in stocks) {
+                Text(text = stock.name)
+            }
+        }
+        Divider(color = AccentButtons, thickness = 1.dp)
+    }
+}
+
+@Preview
+@Composable
+fun ItemPreview() {
+    TradingPostTheme {
+        StockPortfolioItem()
     }
 }
