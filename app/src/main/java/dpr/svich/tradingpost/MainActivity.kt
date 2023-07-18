@@ -84,7 +84,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
-                    Profile()
+                    MainView()
                 }
             }
         }
@@ -332,11 +332,53 @@ fun Profile() {
     }
 }
 
+@Composable
+fun MainView() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(BackgroundStart, BackgroundEnd)
+                ),
+                shape = RectangleShape
+            )
+            .padding(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.linearGradient(colors = listOf(AccentStart, AccentEnd)),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(8.dp),
+        ) {
+            Text(
+                text = "8 530 RUR",
+                fontSize = 40.sp,
+                fontFamily = FontFamily.Default,
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxWidth()
+                    .align(CenterHorizontally),
+                textAlign = TextAlign.Center
+            )
+        }
+        val stockPortfolios = listOf("Акции Сбер", "Tinkoff", "Крипта", "Фьючерсы на гречу")
+        LazyColumn {
+            for (sp in stockPortfolios) {
+                item { MainViewStockPortfolioItem(sp) }
+            }
+        }
+    }
+}
+
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun GreetingPreview() {
     TradingPostTheme {
-        Profile()
+        MainView()
     }
 }
 
@@ -353,7 +395,7 @@ fun StockPortfolioItem(name: String = "Шикаладка") {
             verticalAlignment = CenterVertically
         ) {
             Text(text = "Содержимое:")
-            Row{
+            Row {
                 Button(
                     onClick = { /*TODO*/ },
                     colors = ButtonDefaults.buttonColors(
@@ -397,10 +439,46 @@ fun StockPortfolioItem(name: String = "Шикаладка") {
     }
 }
 
+@Composable
+fun MainViewStockPortfolioItem(name: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Text(text = name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Row(
+            Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End,
+        ) {
+            Text(text = "453 RUR", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(text = "+$5", fontSize = 18.sp, color = Color.Green)
+        }
+        val stocks =
+            listOf(Stock("ПервыйРеспубликанский"), Stock("ГеркулесМолоко"), Stock("Вектор"))
+        Column(Modifier.padding(start = 16.dp, bottom = 8.dp)) {
+            for (stock in stocks) {
+                MainViewStock(stock = stock)
+            }
+        }
+        Divider(color = AccentButtons, thickness = 1.dp)
+    }
+}
+
+@Composable
+fun MainViewStock(stock: Stock) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(text = stock.name)
+        Row {
+            Text(text = "300 RUR")
+            Text(text = "+3", color = Color.Green)
+        }
+    }
+}
+
 @Preview
 @Composable
 fun ItemPreview() {
     TradingPostTheme {
-        StockPortfolioItem()
+        MainViewStockPortfolioItem("Фьючерсы на гречку")
     }
 }
