@@ -35,6 +35,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -67,6 +68,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dpr.svich.tradingpost.model.Stock
+import dpr.svich.tradingpost.screen.Greeting
 import dpr.svich.tradingpost.ui.theme.AccentButtons
 import dpr.svich.tradingpost.ui.theme.AccentEnd
 import dpr.svich.tradingpost.ui.theme.AccentStart
@@ -77,6 +79,7 @@ import dpr.svich.tradingpost.ui.theme.Purple40
 import dpr.svich.tradingpost.ui.theme.TradingPostTheme
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -86,7 +89,22 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                 ) {
-
+                    val navController = rememberNavController()
+                    val isGreeting = remember {
+                        mutableStateOf(false)
+                    }
+                    if (isGreeting.value) {
+                        Greeting(name = "Kitty")
+                    } else {
+                        Scaffold(
+                            content = {
+                                NavHost(
+                                    navController = navController,
+                                    startDestination = Router.MAIN_SCREEN
+                                )
+                            }
+                        )
+                    }
                 }
             }
         }
