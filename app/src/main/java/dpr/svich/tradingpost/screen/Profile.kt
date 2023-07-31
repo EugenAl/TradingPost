@@ -3,6 +3,7 @@ package dpr.svich.tradingpost.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -57,7 +58,7 @@ import dpr.svich.tradingpost.ui.theme.DeleteButton
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Profile() {
+fun Profile(contentPaddingValues: PaddingValues) {
     val openDialogCreateStockPortfolio = remember {
         mutableStateOf(false)
     }
@@ -130,7 +131,7 @@ fun Profile() {
                 ),
                 shape = RectangleShape
             )
-            .padding(8.dp)
+            .padding(contentPaddingValues)
     ) {
         Column(
             modifier = Modifier

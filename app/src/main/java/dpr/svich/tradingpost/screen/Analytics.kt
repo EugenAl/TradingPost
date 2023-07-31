@@ -3,6 +3,7 @@ package dpr.svich.tradingpost.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,7 +26,7 @@ import dpr.svich.tradingpost.ui.theme.BackgroundStart
  * Analytics screen with charts and statistic
  */
 @Composable
-fun Analytics() {
+fun Analytics(contentPaddingValues: PaddingValues) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -35,7 +36,7 @@ fun Analytics() {
                 ),
                 shape = RectangleShape
             )
-            .padding(8.dp)
+            .padding(contentPaddingValues)
     ) {
         Column(
             modifier = Modifier

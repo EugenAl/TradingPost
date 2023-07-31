@@ -34,6 +34,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -67,8 +69,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import dpr.svich.tradingpost.model.Stock
+import dpr.svich.tradingpost.navigation.NavBarItems
+import dpr.svich.tradingpost.screen.Analytics
 import dpr.svich.tradingpost.screen.Greeting
+import dpr.svich.tradingpost.screen.MainView
+import dpr.svich.tradingpost.screen.Profile
 import dpr.svich.tradingpost.ui.theme.AccentButtons
 import dpr.svich.tradingpost.ui.theme.AccentEnd
 import dpr.svich.tradingpost.ui.theme.AccentStart
@@ -97,11 +108,55 @@ class MainActivity : ComponentActivity() {
                         Greeting(name = "Kitty")
                     } else {
                         Scaffold(
-                            content = {
+                            content = { contentPadding ->
                                 NavHost(
                                     navController = navController,
                                     startDestination = Router.MAIN_SCREEN
-                                )
+                                ) {
+                                    composable(Router.PROFILE_SCREEN) {
+                                        Profile(contentPadding)
+                                    }
+                                    composable(Router.MAIN_SCREEN) {
+                                        MainView(contentPadding)
+                                    }
+                                    composable(Router.ANALYTICS_SCREEN) {
+                                        Analytics(contentPadding)
+                                    }
+                                }
+                            },
+                            bottomBar = {
+                                val currentScreen = remember {
+                                    mutableStateOf(Router.MAIN_SCREEN)
+                                }
+                                NavigationBar(Modifier.fillMaxWidth()) {
+                                    NavBarItems.BarItems.forEach { navItem ->
+                                        NavigationBarItem(
+                                            selected = navItem.route == currentScreen.value,
+                                            onClick = {
+                                                currentScreen.value = navItem.route
+                                                navController.navigate(navItem.route) {
+                                                    popUpTo(navController.graph
+                                                        .findStartDestination().id) {
+                                                        saveState = true
+                                                    }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
+                                            },
+
+                                            icon = {
+                                                Icon(
+                                                    imageVector = navItem.image,
+                                                    contentDescription = navItem.title
+                                                )
+                                            },
+                                            label = {
+                                                Text(text = navItem.title)
+                                            })
+
+                                    }
+
+                                }
                             }
                         )
                     }

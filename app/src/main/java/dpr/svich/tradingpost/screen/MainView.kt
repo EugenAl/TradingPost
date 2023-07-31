@@ -3,6 +3,7 @@ package dpr.svich.tradingpost.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,7 +35,7 @@ import dpr.svich.tradingpost.ui.theme.TradingPostTheme
  * Main screen witch contain total balance and list of stock portfolios
  */
 @Composable
-fun MainView() {
+fun MainView(contentPaddingValues: PaddingValues) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -44,7 +45,7 @@ fun MainView() {
                 ),
                 shape = RectangleShape
             )
-            .padding(8.dp)
+            .padding(contentPaddingValues)
     ) {
         Column(
             modifier = Modifier
