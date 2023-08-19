@@ -1,5 +1,6 @@
 package dpr.svich.tradingpost.screen
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -214,7 +215,10 @@ fun Profile(
         LazyColumn {
             stockPortfolios.value?.let { list ->
                 items(list.size) {
-                    StockPortfolioItem(list[it].name)
+                    StockPortfolioItem(list[it].name, onClick = {
+                        Log.d("Profile View", "Delete ${list[it].name}")
+                        model.deleteStockPortfolio(list[it])
+                    })
                 }
             }
         }
@@ -222,7 +226,7 @@ fun Profile(
 }
 
 @Composable
-fun StockPortfolioItem(name: String = "Шикаладка") {
+fun StockPortfolioItem(name: String = "Шикаладка", onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -252,7 +256,7 @@ fun StockPortfolioItem(name: String = "Шикаладка") {
                     )
                 }
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = onClick,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = DeleteButton,
                         contentColor = Color.White
@@ -268,12 +272,12 @@ fun StockPortfolioItem(name: String = "Шикаладка") {
                 }
             }
         }
-        val stocks = listOf<Stock>(Stock("SBER"), Stock("MMQ"), Stock("TIFF"))
-        Column(Modifier.padding(start = 16.dp, bottom = 8.dp)) {
-            for (stock in stocks) {
-                Text(text = stock.name)
-            }
-        }
+//        val stocks = listOf<Stock>(Stock("SBER"), Stock("MMQ"), Stock("TIFF"))
+//        Column(Modifier.padding(start = 16.dp, bottom = 8.dp)) {
+//            for (stock in stocks) {
+//                Text(text = stock.name)
+//            }
+//        }
         Divider(color = AccentButtons, thickness = 1.dp)
     }
 }

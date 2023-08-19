@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dpr.svich.tradingpost.model.Stock
 import dpr.svich.tradingpost.ui.theme.AccentButtons
 import dpr.svich.tradingpost.ui.theme.AccentEnd
@@ -30,12 +32,14 @@ import dpr.svich.tradingpost.ui.theme.AccentStart
 import dpr.svich.tradingpost.ui.theme.BackgroundEnd
 import dpr.svich.tradingpost.ui.theme.BackgroundStart
 import dpr.svich.tradingpost.ui.theme.TradingPostTheme
+import dpr.svich.tradingpost.viewModel.ProfileViewModel
 
 /**
  * Main screen witch contain total balance and list of stock portfolios
  */
 @Composable
-fun MainView(contentPaddingValues: PaddingValues) {
+fun MainView(contentPaddingValues: PaddingValues,
+    model: ProfileViewModel = viewModel(factory = ProfileViewModel.Factory)) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -67,10 +71,18 @@ fun MainView(contentPaddingValues: PaddingValues) {
                 textAlign = TextAlign.Center
             )
         }
-        val stockPortfolios = listOf("Акции Сбер", "Tinkoff", "Крипта", "Фьючерсы на гречу")
-        LazyColumn {
-            for (sp in stockPortfolios) {
-                item { MainViewStockPortfolioItem(sp) }
+//        val stockPortfolios = listOf("Акции Сбер", "Tinkoff", "Крипта", "Фьючерсы на гречу")
+//        LazyColumn {
+//            for (sp in stockPortfolios) {
+//                item { MainViewStockPortfolioItem(sp) }
+//            }
+//        }
+        val stockPortfolios = model.stockPortfolioList.observeAsState()
+        LazyColumn{
+            stockPortfolios.value?.let{ list ->
+                items(list.size){
+                    MainViewStockPortfolioItem(name = list[it].name)
+                }
             }
         }
     }
