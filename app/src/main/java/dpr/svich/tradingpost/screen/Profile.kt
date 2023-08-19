@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dpr.svich.tradingpost.model.Stock
 import dpr.svich.tradingpost.ui.theme.AccentButtons
 import dpr.svich.tradingpost.ui.theme.AccentEnd
@@ -52,13 +54,17 @@ import dpr.svich.tradingpost.ui.theme.AccentStart
 import dpr.svich.tradingpost.ui.theme.BackgroundEnd
 import dpr.svich.tradingpost.ui.theme.BackgroundStart
 import dpr.svich.tradingpost.ui.theme.DeleteButton
+import dpr.svich.tradingpost.viewModel.ProfileViewModel
 
 /**
  * Profile screen which contain username, preferences button and stock portfolios button
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Profile(contentPaddingValues: PaddingValues) {
+fun Profile(
+    contentPaddingValues: PaddingValues,
+    model: ProfileViewModel = viewModel(factory = ProfileViewModel.Factory)
+) {
     val openDialogCreateStockPortfolio = remember {
         mutableStateOf(false)
     }
@@ -108,7 +114,13 @@ fun Profile(contentPaddingValues: PaddingValues) {
             },
             confirmButton = {
                 Button(
-                    onClick = { openDialogCreateStockPortfolio.value = false },
+                    onClick = {
+                        if(inputValueNameStockPortfolio.value.text.isNotEmpty()){
+                            openDialogCreateStockPortfolio.value = false
+                            model.addStockPortfolio(inputValueNameStockPortfolio.value.text, "dscr")
+                            inputValueNameStockPortfolio.value = TextFieldValue("")
+                        }
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AccentButtons,
                         contentColor = Color.White
@@ -122,6 +134,8 @@ fun Profile(contentPaddingValues: PaddingValues) {
             containerColor = AccentEnd
         )
     }
+
+    val stockPortfolios = model.stockPortfolioList.observeAsState()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -191,10 +205,17 @@ fun Profile(contentPaddingValues: PaddingValues) {
                 }
             }
         }
-        val stockPortfolios = listOf("Акции Сбер", "Tinkoff", "Крипта", "Фьючерсы на гречу")
+//        val stockPortfolios = listOf("Акции Сбер", "Tinkoff", "Крипта", "Фьючерсы на гречу")
+//        LazyColumn {
+//            for (sp in stockPortfolios) {
+//                item { StockPortfolioItem(sp) }
+//            }
+//        }
         LazyColumn {
-            for (sp in stockPortfolios) {
-                item { StockPortfolioItem(sp) }
+            stockPortfolios.value?.let { list ->
+                items(list.size) {
+                    StockPortfolioItem(list[it].name)
+                }
             }
         }
     }

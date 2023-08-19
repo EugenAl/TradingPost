@@ -1,9 +1,15 @@
 package dpr.svich.tradingpost.viewModel
 
+import android.text.Editable.Factory
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.lifecycle.viewmodel.ViewModelFactoryDsl
+import dpr.svich.tradingpost.TradingApplication
 import dpr.svich.tradingpost.database.Repository
 import dpr.svich.tradingpost.model.StockPortfolio
 import kotlinx.coroutines.Job
@@ -25,6 +31,16 @@ class ProfileViewModel(private val repository: Repository): ViewModel() {
     fun deleteStockPortfolio(sp: StockPortfolio): Job{
         return viewModelScope.launch {
             repository.deleteStockPortfolio(sp)
+        }
+    }
+
+    companion object{
+        val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory{
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
+                val application = checkNotNull(extras[APPLICATION_KEY])
+                return ProfileViewModel((application as TradingApplication).repository) as T
+            }
         }
     }
 }
