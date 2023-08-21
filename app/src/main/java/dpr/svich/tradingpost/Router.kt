@@ -6,5 +6,6 @@ class Router {
         val PROFILE_SCREEN = "profile"
         val ANALYTICS_SCREEN = "anal"
         val GREETING_SCREEN = "greeting"
+        val PORTFOLIO_EDIT_SCREEN = "portfolio_edit/{id}"
     }
 }

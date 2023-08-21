@@ -26,6 +26,7 @@ import dpr.svich.tradingpost.navigation.NavBarItems
 import dpr.svich.tradingpost.screen.Analytics
 import dpr.svich.tradingpost.screen.Greeting
 import dpr.svich.tradingpost.screen.MainView
+import dpr.svich.tradingpost.screen.PortfolioEdit
 import dpr.svich.tradingpost.screen.Profile
 import dpr.svich.tradingpost.ui.theme.TradingPostTheme
 
@@ -54,13 +55,16 @@ class MainActivity : ComponentActivity() {
                                     startDestination = Router.MAIN_SCREEN
                                 ) {
                                     composable(Router.PROFILE_SCREEN) {
-                                        Profile(contentPadding)
+                                        Profile(navController, contentPadding)
                                     }
                                     composable(Router.MAIN_SCREEN) {
                                         MainView(contentPadding)
                                     }
                                     composable(Router.ANALYTICS_SCREEN) {
                                         Analytics(contentPadding)
+                                    }
+                                    composable(Router.PORTFOLIO_EDIT_SCREEN){
+                                        PortfolioEdit(it.arguments?.getString("id")!!, contentPadding)
                                     }
                                 }
                             },

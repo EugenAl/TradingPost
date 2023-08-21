@@ -1,7 +1,9 @@
 package dpr.svich.tradingpost.screen
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.currentCompositionLocalContext
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,7 +51,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import dpr.svich.tradingpost.Router
 import dpr.svich.tradingpost.model.Stock
+import dpr.svich.tradingpost.model.StockPortfolio
 import dpr.svich.tradingpost.ui.theme.AccentButtons
 import dpr.svich.tradingpost.ui.theme.AccentEnd
 import dpr.svich.tradingpost.ui.theme.AccentStart
@@ -63,6 +69,7 @@ import dpr.svich.tradingpost.viewModel.ProfileViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Profile(
+    navController: NavController,
     contentPaddingValues: PaddingValues,
     model: ProfileViewModel = viewModel(factory = ProfileViewModel.Factory)
 ) {
@@ -116,7 +123,7 @@ fun Profile(
             confirmButton = {
                 Button(
                     onClick = {
-                        if(inputValueNameStockPortfolio.value.text.isNotEmpty()){
+                        if (inputValueNameStockPortfolio.value.text.isNotEmpty()) {
                             openDialogCreateStockPortfolio.value = false
                             model.addStockPortfolio(inputValueNameStockPortfolio.value.text, "dscr")
                             inputValueNameStockPortfolio.value = TextFieldValue("")
@@ -182,7 +189,7 @@ fun Profile(
             ) {
 
                 Text(
-                    text = "Портфелей: 4",
+                    text = "Портфелей: ${stockPortfolios.value?.size}",
                     modifier = Modifier.padding(start = 8.dp),
                     fontSize = 18.sp,
                     textAlign = TextAlign.Justify
@@ -206,19 +213,25 @@ fun Profile(
                 }
             }
         }
-//        val stockPortfolios = listOf("Акции Сбер", "Tinkoff", "Крипта", "Фьючерсы на гречу")
-//        LazyColumn {
-//            for (sp in stockPortfolios) {
-//                item { StockPortfolioItem(sp) }
-//            }
-//        }
         LazyColumn {
             stockPortfolios.value?.let { list ->
                 items(list.size) {
-                    StockPortfolioItem(list[it].name, onClick = {
-                        Log.d("Profile View", "Delete ${list[it].name}")
-                        model.deleteStockPortfolio(list[it])
-                    })
+                    StockPortfolioItem(
+                        list[it],
+                        onDeleteClick = {
+                            Log.d("Profile View", "Delete ${list[it].name}")
+                            model.deleteStockPortfolio(list[it])
+                        },
+                        onClick = {
+                            Log.d("StockPortfolioItem", "Click! ${list[it].name}")
+                            navController.navigate(
+                                Router.PORTFOLIO_EDIT_SCREEN.replace(
+                                    "id",
+                                    list[it].id.toString()
+                                )
+                            )
+                        }
+                    )
                 }
             }
         }
@@ -226,13 +239,17 @@ fun Profile(
 }
 
 @Composable
-fun StockPortfolioItem(name: String = "Шикаладка", onClick: () -> Unit) {
+fun StockPortfolioItem(
+    stockPortfolio: StockPortfolio,
+    onDeleteClick: () -> Unit,
+    onClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
     ) {
-        Text(text = name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Text(text = stockPortfolio.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
         Row(
             Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -240,7 +257,7 @@ fun StockPortfolioItem(name: String = "Шикаладка", onClick: () -> Unit)
             Text(text = "Содержимое:")
             Row {
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = onClick,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AccentButtons,
                         contentColor = Color.White
@@ -256,7 +273,7 @@ fun StockPortfolioItem(name: String = "Шикаладка", onClick: () -> Unit)
                     )
                 }
                 Button(
-                    onClick = onClick,
+                    onClick = onDeleteClick,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = DeleteButton,
                         contentColor = Color.White
@@ -272,12 +289,6 @@ fun StockPortfolioItem(name: String = "Шикаладка", onClick: () -> Unit)
                 }
             }
         }
-//        val stocks = listOf<Stock>(Stock("SBER"), Stock("MMQ"), Stock("TIFF"))
-//        Column(Modifier.padding(start = 16.dp, bottom = 8.dp)) {
-//            for (stock in stocks) {
-//                Text(text = stock.name)
-//            }
-//        }
         Divider(color = AccentButtons, thickness = 1.dp)
     }
 }
