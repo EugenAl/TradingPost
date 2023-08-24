@@ -33,6 +33,10 @@ class ProfileViewModel(private val repository: Repository): ViewModel() {
 
     fun deleteStockPortfolio(sp: StockPortfolio): Job{
         return viewModelScope.launch {
+            val stocks = loadStocks(sp.id)
+            stocks.value?.let {
+                repository.deleteStock(it)
+            }
             repository.deleteStockPortfolio(sp)
         }
     }

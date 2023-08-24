@@ -76,9 +76,21 @@ fun Profile(
     val openDialogCreateStockPortfolio = remember {
         mutableStateOf(false)
     }
+
+    val openDialogDeleteStockPortfolio = remember {
+        mutableStateOf(false)
+    }
+
+    val deletePortfolio = remember {
+        mutableStateOf(0)
+    }
+
     val inputValueNameStockPortfolio = remember {
         mutableStateOf(TextFieldValue())
     }
+
+    val stockPortfolios = model.stockPortfolioList.observeAsState()
+
     if (openDialogCreateStockPortfolio.value) {
         // Alert dialog for create stock portfolio
         AlertDialog(
@@ -143,7 +155,53 @@ fun Profile(
         )
     }
 
-    val stockPortfolios = model.stockPortfolioList.observeAsState()
+    if (openDialogDeleteStockPortfolio.value) {
+        val portfolio =
+            stockPortfolios.value?.let {
+                it.find { portfolio -> portfolio.id == deletePortfolio.value }
+            }
+        if(portfolio == null){
+            openDialogDeleteStockPortfolio.value = false
+        } else {
+            AlertDialog(
+                onDismissRequest = { openDialogDeleteStockPortfolio.value = false },
+                title = { Text(text = "Удалить портфель") },
+                text = { Text(text = "Действительно удалить ${portfolio.name}?") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            model.deleteStockPortfolio(portfolio)
+                            openDialogDeleteStockPortfolio.value = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = DeleteButton,
+                            contentColor = Color.Red
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text(text = "Удалить", textAlign = TextAlign.Center)
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = {
+                            openDialogDeleteStockPortfolio.value = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AccentButtons,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text(text = "Отмена", textAlign = TextAlign.Center)
+                    }
+                },
+                shape = CutCornerShape(topStart = 16.dp, bottomEnd = 16.dp),
+                containerColor = AccentEnd
+            )
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -220,7 +278,8 @@ fun Profile(
                         list[it],
                         onDeleteClick = {
                             Log.d("Profile View", "Delete ${list[it].name}")
-                            model.deleteStockPortfolio(list[it])
+                            deletePortfolio.value = list[it].id
+                            openDialogDeleteStockPortfolio.value = true
                         },
                         onClick = {
                             Log.d("StockPortfolioItem", "Click! ${list[it].name}")

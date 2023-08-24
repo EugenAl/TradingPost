@@ -1,5 +1,6 @@
 package dpr.svich.tradingpost.database
 
+import android.util.Log
 import androidx.annotation.WorkerThread
 import dpr.svich.tradingpost.model.Stock
 import dpr.svich.tradingpost.model.StockPortfolio
@@ -36,6 +37,11 @@ class Repository(private val stockPortfolioDao: StockPortfolioDao, private val s
 
     @WorkerThread
     suspend fun deleteStock(s: Stock){
+        stockDao.delete(s)
+    }
+
+    suspend fun deleteStock(s: List<Stock>){
+        Log.d("Repository", "Deleted stocks $s")
         stockDao.delete(s)
     }
 }

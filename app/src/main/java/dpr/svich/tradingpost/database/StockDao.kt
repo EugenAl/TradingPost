@@ -24,5 +24,5 @@ interface StockDao {
     suspend fun delete(s: Stock)
 
     @Delete
-    suspend fun delete(vararg s: Stock)
+    suspend fun delete(s: List<Stock>)
 }
