@@ -226,7 +226,7 @@ fun Profile(
                             Log.d("StockPortfolioItem", "Click! ${list[it].name}")
                             navController.navigate(
                                 Router.PORTFOLIO_EDIT_SCREEN.replace(
-                                    "id",
+                                    "{id}",
                                     list[it].id.toString()
                                 )
                             )

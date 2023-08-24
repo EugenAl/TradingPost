@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.ViewModelFactoryDsl
 import dpr.svich.tradingpost.TradingApplication
 import dpr.svich.tradingpost.database.Repository
+import dpr.svich.tradingpost.model.Stock
 import dpr.svich.tradingpost.model.StockPortfolio
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -19,6 +20,8 @@ class ProfileViewModel(private val repository: Repository): ViewModel() {
 
     val stockPortfolioList: LiveData<List<StockPortfolio>> =
         repository.allStockPortfolio.asLiveData()
+
+    fun getStockPortfolio(id: Int) = repository.getPortfolioById(id).asLiveData()
 
     fun addStockPortfolio(name: String, description: String): Job {
         return viewModelScope.launch {
@@ -31,6 +34,20 @@ class ProfileViewModel(private val repository: Repository): ViewModel() {
     fun deleteStockPortfolio(sp: StockPortfolio): Job{
         return viewModelScope.launch {
             repository.deleteStockPortfolio(sp)
+        }
+    }
+
+    fun loadStocks(id: Int) = repository.getStocksFromPortfolio(id).asLiveData()
+
+    fun addStock(index: String, count: Int, price: Double, portfolio: Int): Job{
+        return viewModelScope.launch {
+            repository.insertStock(Stock(0, index, count, price, portfolio))
+        }
+    }
+
+    fun deleteStock(s: Stock): Job{
+        return viewModelScope.launch {
+            repository.deleteStock(s)
         }
     }
 

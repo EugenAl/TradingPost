@@ -1,6 +1,7 @@
 package dpr.svich.tradingpost.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,12 +9,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -32,6 +42,7 @@ import dpr.svich.tradingpost.ui.theme.AccentStart
 import dpr.svich.tradingpost.ui.theme.BackgroundEnd
 import dpr.svich.tradingpost.ui.theme.BackgroundStart
 import dpr.svich.tradingpost.ui.theme.TradingPostTheme
+import dpr.svich.tradingpost.viewModel.MainViewViewModel
 import dpr.svich.tradingpost.viewModel.ProfileViewModel
 
 /**
@@ -39,7 +50,11 @@ import dpr.svich.tradingpost.viewModel.ProfileViewModel
  */
 @Composable
 fun MainView(contentPaddingValues: PaddingValues,
-    model: ProfileViewModel = viewModel(factory = ProfileViewModel.Factory)) {
+    model: MainViewViewModel = viewModel(factory = MainViewViewModel.Factory)) {
+    var totalCost = 0.0
+    val totalCostView = remember {
+        mutableStateOf(0.0)
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -61,7 +76,7 @@ fun MainView(contentPaddingValues: PaddingValues,
                 .padding(8.dp),
         ) {
             Text(
-                text = "8 530 RUR",
+                text = "${totalCostView.value.format(2)} ₽",
                 fontSize = 40.sp,
                 fontFamily = FontFamily.Default,
                 modifier = Modifier
@@ -71,18 +86,18 @@ fun MainView(contentPaddingValues: PaddingValues,
                 textAlign = TextAlign.Center
             )
         }
-//        val stockPortfolios = listOf("Акции Сбер", "Tinkoff", "Крипта", "Фьючерсы на гречу")
-//        LazyColumn {
-//            for (sp in stockPortfolios) {
-//                item { MainViewStockPortfolioItem(sp) }
-//            }
-//        }
         val stockPortfolios = model.stockPortfolioList.observeAsState()
         LazyColumn{
             stockPortfolios.value?.let{ list ->
                 items(list.size){
-                    MainViewStockPortfolioItem(name = list[it].name)
+                    val stocks = model.loadStocks(list[it].id).observeAsState()
+                    stocks.value?.let{stocks ->
+                        MainViewStockPortfolioItem(name = list[it].name, stocks)
+                        totalCost+=stocks.sumOf { stock -> stock.price*stock.count }
+                        totalCostView.value = totalCost
+                    }
                 }
+                totalCost = 0.0
             }
         }
     }
@@ -90,7 +105,7 @@ fun MainView(contentPaddingValues: PaddingValues,
 
 
 @Composable
-fun MainViewStockPortfolioItem(name: String) {
+fun MainViewStockPortfolioItem(name: String, stocks:List<Stock>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -100,15 +115,12 @@ fun MainViewStockPortfolioItem(name: String) {
         Row(
             Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End,
         ) {
-            Text(text = "453 RUR", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-            Text(text = "+$5", fontSize = 18.sp, color = Color.Green)
+            val totalCostOfPortfolio = stocks.sumOf { it.count * it.price }
+            Text(text = "${totalCostOfPortfolio.format(2)} ₽",
+                fontWeight = FontWeight.Bold, fontSize = 18.sp)
         }
-        val stocks =
-            listOf(Stock("ПервыйРеспубликанский"), Stock("ГеркулесМолоко"), Stock("Вектор"))
-        Column(Modifier.padding(start = 16.dp, bottom = 8.dp)) {
-            for (stock in stocks) {
-                MainViewStock(stock = stock)
-            }
+        for(s in stocks){
+            MainViewStock(stock = s)
         }
         Divider(color = AccentButtons, thickness = 1.dp)
     }
@@ -116,19 +128,32 @@ fun MainViewStockPortfolioItem(name: String) {
 
 @Composable
 fun MainViewStock(stock: Stock) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(text = stock.name)
-        Row {
-            Text(text = "300 RUR")
-            Text(text = "+3", color = Color.Green)
+    Column(modifier = Modifier.padding(vertical = 1.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, Color.Black, RoundedCornerShape(10.dp))
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.width(200.dp)) {
+                Text(stock.index, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                Text(
+                    text = "${stock.count} шт.◈${stock.price} ₽",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Thin
+                )
+            }
+            Column(Modifier.padding(horizontal = 4.dp)) {
+                Text(
+                    text = (stock.count * stock.price).toString() + "₽",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal
+                )
+            }
         }
     }
 }
 
-//@Preview
-@Composable
-fun ItemPreview() {
-    TradingPostTheme {
-        MainViewStockPortfolioItem("Фьючерсы на гречку")
-    }
-}
+fun Double.format(digits: Int) = "%.${digits}f".format(this)

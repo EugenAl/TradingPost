@@ -4,7 +4,7 @@ import android.app.Application
 import dpr.svich.tradingpost.database.AppDatabase
 import dpr.svich.tradingpost.database.Repository
 
-class TradingApplication: Application() {
+class TradingApplication : Application() {
     val database by lazy { AppDatabase.getDatabase(this) }
-    val repository by lazy { Repository(database.stockPortfolioDao())}
+    val repository by lazy { Repository(database.stockPortfolioDao(), database.stockDao()) }
 }

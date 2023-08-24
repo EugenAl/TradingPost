@@ -1,7 +1,9 @@
 package dpr.svich.tradingpost.screen
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Arrangement.End
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,19 +14,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -34,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -42,12 +50,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dpr.svich.tradingpost.model.Stock
 import dpr.svich.tradingpost.model.StockPortfolio
 import dpr.svich.tradingpost.ui.theme.AccentButtons
 import dpr.svich.tradingpost.ui.theme.AccentEnd
 import dpr.svich.tradingpost.ui.theme.AccentStart
 import dpr.svich.tradingpost.ui.theme.BackgroundEnd
 import dpr.svich.tradingpost.ui.theme.BackgroundStart
+import dpr.svich.tradingpost.ui.theme.DeleteButton
 import dpr.svich.tradingpost.viewModel.ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,6 +67,9 @@ fun PortfolioEdit(
     contentPaddingValues: PaddingValues,
     model: ProfileViewModel = viewModel(factory = ProfileViewModel.Factory)
 ) {
+
+    val stockPortfolio = model.getStockPortfolio(stockPortfolioId.toInt()).observeAsState()
+    val stocks = model.loadStocks(stockPortfolioId.toInt()).observeAsState()
 
     val inputValueStockIndex = remember {
         mutableStateOf(TextFieldValue())
@@ -81,10 +94,13 @@ fun PortfolioEdit(
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "stockPortfolio.name $stockPortfolioId", fontSize = 24.sp,
+            text = stockPortfolio.value?.name ?: "Unknown", fontSize = 24.sp,
             modifier = Modifier
                 .padding(16.dp)
         )
+        /**
+         * Add stock block
+         */
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -94,9 +110,11 @@ fun PortfolioEdit(
                 )
                 .padding(4.dp),
         ) {
-            Row(modifier = Modifier.fillMaxWidth(),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically) {
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 TextField(
                     value = inputValueStockIndex.value,
                     onValueChange = {
@@ -168,7 +186,9 @@ fun PortfolioEdit(
                 )//prise
             }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom
             ) {
@@ -206,7 +226,27 @@ fun PortfolioEdit(
                     colors = TextFieldDefaults.textFieldColors(containerColor = Color.Transparent)
                 )//count
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = {
+                        if (inputValueStockIndex.value.text.isNotEmpty() and
+                            inputValueStockCount.value.text.isNotEmpty() and
+                            inputValueStockPrice.value.text.isNotEmpty()
+                        ) {
+                            try {
+                                model.addStock(
+                                    inputValueStockIndex.value.text,
+                                    inputValueStockCount.value.text.toInt(),
+                                    inputValueStockPrice.value.text.toDouble(),
+                                    stockPortfolioId.toInt()
+                                )
+                                inputValueStockIndex.value = TextFieldValue()
+                                inputValueStockCount.value = TextFieldValue()
+                                inputValueStockPrice.value = TextFieldValue()
+                            } catch (e: Exception) {
+                                Log.e("Add Stock", "Something went wrong")
+                                e.printStackTrace()
+                            }
+                        }
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AccentButtons,
                         contentColor = Color.White
@@ -224,6 +264,20 @@ fun PortfolioEdit(
                 }
             }
         }
+
+        /**
+         * List of stocks
+         */
+        LazyColumn {
+            stocks.value?.let { list ->
+                items(list.size) {
+                    StockItem(list[it]) {
+                        model.deleteStock(list[it])
+                    }
+                }
+            }
+        }
+
         Button(
             onClick = { /*TODO*/ },
             colors = ButtonDefaults.buttonColors(
@@ -240,6 +294,48 @@ fun PortfolioEdit(
                 tint = Color.White
             )
             Text(text = "Добавить")
+        }
+    }
+}
+
+@Composable
+fun StockItem(s: Stock, onDelete: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.width(200.dp)) {
+            Text(s.index, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+            Text(
+                text = "${s.count} шт.◈${s.price} ₽",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Thin
+            )
+            Divider(color = AccentButtons, thickness = 1.dp)
+        }
+
+        Row(Modifier.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = (s.count * s.price).toString() + "₽",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Normal
+            )
+            Button(
+                onClick = onDelete,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = Color.White)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete stock",
+                    modifier = Modifier.size(30.dp),
+                    tint = Color.White
+                )
+            }
         }
     }
 }

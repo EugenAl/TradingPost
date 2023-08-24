@@ -13,6 +13,9 @@ interface StockPortfolioDao {
     @Query("SELECT * FROM stock_portfolio_table")
     fun getAll(): Flow<List<StockPortfolio>>
 
+    @Query("SELECT * FROM stock_portfolio_table WHERE id = :id")
+    fun getPortfolioById(id:Int): Flow<StockPortfolio>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(sp: StockPortfolio)
 
