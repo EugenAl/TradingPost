@@ -16,12 +16,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -71,6 +73,13 @@ fun PortfolioEdit(
     val stockPortfolio = model.getStockPortfolio(stockPortfolioId.toInt()).observeAsState()
     val stocks = model.loadStocks(stockPortfolioId.toInt()).observeAsState()
 
+    val openDialogDeleteStock = remember {
+        mutableStateOf(false)
+    }
+    val deletedStock = remember {
+        mutableStateOf(0)
+    }
+
     val inputValueStockIndex = remember {
         mutableStateOf(TextFieldValue())
     }
@@ -81,6 +90,51 @@ fun PortfolioEdit(
         mutableStateOf(TextFieldValue())
     }
 
+    if (openDialogDeleteStock.value) {
+        val stock = stocks.value?.let { it.find { stock -> stock.id == deletedStock.value } }
+        if (stock == null) {
+            openDialogDeleteStock.value = false
+        } else {
+            AlertDialog(
+                onDismissRequest = { openDialogDeleteStock.value = false },
+                title = { Text(text = "Удаление акций") },
+                text = { Text(text = "Действительно удалить ${stock.count} акций ${stock.index}?") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            model.deleteStock(stock)
+                            openDialogDeleteStock.value = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = DeleteButton,
+                            contentColor = Color.Red
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text(text = "Удалить", textAlign = TextAlign.Center)
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = {
+                            openDialogDeleteStock.value = false
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AccentButtons,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text(text = "Отмена", textAlign = TextAlign.Center)
+                    }
+                },
+                shape = CutCornerShape(topStart = 16.dp, bottomEnd = 16.dp),
+                containerColor = AccentEnd
+            )
+        }
+    }
+
+    // max length of Index field in stock
     val indexSize = 4
     Column(
         modifier = Modifier
@@ -91,7 +145,7 @@ fun PortfolioEdit(
                 shape = RectangleShape
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
+        verticalArrangement = Arrangement.Top
     ) {
         Text(
             text = stockPortfolio.value?.name ?: "Unknown", fontSize = 24.sp,
@@ -272,28 +326,12 @@ fun PortfolioEdit(
             stocks.value?.let { list ->
                 items(list.size) {
                     StockItem(list[it]) {
-                        model.deleteStock(list[it])
+                        //model.deleteStock(list[it])
+                        deletedStock.value = list[it].id
+                        openDialogDeleteStock.value = true
                     }
                 }
             }
-        }
-
-        Button(
-            onClick = { /*TODO*/ },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = AccentButtons,
-                contentColor = Color.White
-            ),
-            modifier = Modifier.padding(4.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add",
-                modifier = Modifier.size(24.dp),
-                tint = Color.White
-            )
-            Text(text = "Добавить")
         }
     }
 }
@@ -327,7 +365,8 @@ fun StockItem(s: Stock, onDelete: () -> Unit) {
                 onClick = onDelete,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.Transparent,
-                    contentColor = Color.White)
+                    contentColor = Color.White
+                )
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
