@@ -12,9 +12,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCompositionContext
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -24,25 +31,42 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.himanshoe.charty.common.ChartData
 import com.himanshoe.charty.common.ChartDataCollection
 import com.himanshoe.charty.common.config.ChartyLabelTextConfig
 import com.himanshoe.charty.pie.PieChart
 import com.himanshoe.charty.pie.config.PieChartConfig
 import com.himanshoe.charty.pie.model.PieData
+import dpr.svich.tradingpost.adapter.ChartAdapter
 import dpr.svich.tradingpost.ui.theme.AccentButtons
 import dpr.svich.tradingpost.ui.theme.AccentEnd
 import dpr.svich.tradingpost.ui.theme.AccentStart
 import dpr.svich.tradingpost.ui.theme.BackgroundEnd
 import dpr.svich.tradingpost.ui.theme.BackgroundStart
 import dpr.svich.tradingpost.ui.theme.Pink40
+import dpr.svich.tradingpost.viewModel.MainViewViewModel
 
 
 /**
  * Analytics screen with charts and statistic
  */
 @Composable
-fun Analytics(contentPaddingValues: PaddingValues) {
+fun Analytics(
+    contentPaddingValues: PaddingValues,
+    model: MainViewViewModel = viewModel(factory = MainViewViewModel.Factory)
+) {
+    var adapter by remember{
+        mutableStateOf(ChartAdapter())
+    }
+    val stockPortfolios = model.stockPortfolioList.observeAsState()
+    stockPortfolios.value?.also { adapter = ChartAdapter() }
+    stockPortfolios.value?.forEach{
+        val stocks = model.loadStocks(it.id).observeAsState()
+        stocks.value?.let{stocks ->
+            adapter.addEntity(it, stocks)
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -68,25 +92,7 @@ fun Analytics(contentPaddingValues: PaddingValues) {
         ) {
             Text(text = "Капитализация портфелей", fontWeight = FontWeight.Bold, fontSize = 18.sp)
             PieChart(
-                dataCollection = ChartDataCollection(
-                    listOf(
-                        PieData(
-                            2746f,
-                            "Пенькофф",
-                            Pink40
-                        ),
-                        PieData(
-                            16452f,
-                            "Фьючерсы на гречку",
-                            AccentStart
-                        ),
-                        PieData(
-                            857.34f,
-                            "Крипта",
-                            AccentEnd
-                        )
-                    )
-                ),
+                dataCollection = adapter.loadChart(),
                 pieChartConfig = PieChartConfig(donut = true, showLabel = true)
             )
         }
@@ -102,26 +108,16 @@ fun Analytics(contentPaddingValues: PaddingValues) {
                 ),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp), horizontalArrangement = Arrangement.SpaceBetween){
-                Text(text = "Пенькоф", Modifier.width(100.dp))
-                Text(text = "${2746.0.format(2)} ₽")
-                Text(text = "${(2746*100/(2746+16452+857.34)).format(2)}%")
-            }
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp), horizontalArrangement = Arrangement.SpaceBetween){
-                Text(text = "Фьючерсы на гречку", Modifier.width(100.dp))
-                Text(text = "${16452.74.format(2)} ₽")
-                Text(text = "${(16452*100/(2746+16452+857.34)).format(2)}%")
-            }
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(4.dp), horizontalArrangement = Arrangement.SpaceBetween){
-                Text(text = "Крипта", Modifier.width(100.dp))
-                Text(text = "${857.34.format(2)} ₽")
-                Text(text = "${(857.34*100/(2746+16452+857.34)).format(2)}%")
+            for(row in adapter.loadLegend()){
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp), horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = row.name, Modifier.width(100.dp))
+                    Text(text = row.total)
+                    Text(text = row.totalPercent)
+                }
             }
         }
     }
